@@ -23,3 +23,25 @@ export const addLikeToUser = async (userId, like) => {
     );
     return updatedUser;
 }
+
+export const addFollowToUser = async(currentUserId, followUserId) => {
+    const updatedCurrentUser = await usersModel.findByIdAndUpdate(
+        currentUserId,
+        { $addToSet: { follows: followUserId } }, // Use $addToSet to avoid duplicate entries
+        { new: true }
+    );
+    const updatedFollowedUser = await usersModel.findByIdAndUpdate(
+        followUserId,
+        { $addToSet: { followers: currentUserId } },
+        { new: true }
+    );
+    return { updatedCurrentUser, updatedFollowedUser };
+}
+
+export const getFollowedUsers = async(currentUserId) => {
+    const currentUser = await usersModel.findById(currentUserId);
+    if (!currentUser) {
+        throw new Error("User not found");
+    }
+    return currentUser.follows;
+}

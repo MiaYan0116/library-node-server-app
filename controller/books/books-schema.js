@@ -22,8 +22,12 @@ const likesSchema = mongoose.Schema({
 })
 
 const bookSchema = mongoose.Schema({
-    bookName: String,
-    Author: String,
+    title: String,
+    author: String,
+		first_publish_year: Number,
+		cover_id: Number,
+		cover_img: String,
+		edition_count: Number,
     liked: Boolean,
 		likes: {
 			type: [likesSchema],

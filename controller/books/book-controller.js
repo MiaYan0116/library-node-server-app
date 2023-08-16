@@ -2,23 +2,58 @@ import * as booksDao from './books-dao.js';
 import * as usersDao from '../users/users-dao.js';
 
 const bookController = (app) => {
-    const createBook = async (req, res) => {
-        const newBook = req.body;
-        newBook.likes = [];
-        newBook.comments = [];
-        newBook.bookName = req.body.bookName;
-        newBook.author = req.body.author;
-        newBook.liked = false;
-        const insertedBook = await booksDao.createBook(newBook);
-        res.json(insertedBook);
+
+    const searchAndSaveBooks = async(req, res) => {
+        const searchResults = req.body.searchResults;
+        const savedBooks = [];
+        for (const externalBookData of searchResults) {
+            const existingBook = await booksDao.findBookById(externalBookData.id);
+            if(!existingBook){
+                // Create a new book object based on external API data
+                const newBook = {
+                    _id: externalBookData.id,
+                    title: externalBookData.title,
+                    author: externalBookData.author,
+                    first_publish_year: externalBookData.first_publish_year,
+                    cover_id: externalBookData.cover_id,
+                    cover_img: externalBookData.cover_img,
+                    edition_count: externalBookData.edition_count,
+                    liked: false,
+                    likes: [],
+                    bookComments: []
+                };
+                // Save the new book to the internal database
+                const insertedBook = await booksDao.createBook(newBook);
+                savedBooks.push(insertedBook);
+            } 
+        }
+        res.json(savedBooks);
     }
-    
+    // const createBook = async (req, res) => {
+    //     const newBook = req.body;
+    //     // const newBook = {
+    //         // newBook._id = externalBookData.external_id
+    //         // title: externalBookData.title,
+    //         // author: externalBookData.author,
+    //         // cover_id = externalBookData.cover_id,
+    //     // }
+        
+    //     newBook.title = req.body.title;
+    //     newBook.author = req.body.author;
+        
+    //     newBook.liked = false;
+    //     newBook.likes = [];
+    //     newBook.comments = [];
+    //     const insertedBook = await booksDao.createBook(newBook);
+    //     res.json(insertedBook);
+    // }
+
     const findBooks = async (req, res) => {
         const books = await booksDao.findBooks()
         res.json(books);
     }
 
-    const findOnebook = async (req, res) => {
+    const bookDetails = async (req, res) => {
         const bookId = req.params.bid;
         const book = await booksDao.findOneBook(bookId)
         res.json(book);
@@ -51,9 +86,12 @@ const bookController = (app) => {
         res.json(updatedUser);
     }
 
-    app.post('/api/books', createBook);
+
+
+    app.post('/api/books', searchAndSaveBooks);
+    // app.post('/api/books', createBook);
     app.get('/api/books', findBooks);
-    app.get('/api/books/:bid', findOnebook);
+    app.get('/api/books/details/:bid', bookDetails);
     app.put('/api/books/:bid', updateBook);
     app.post('/api/books/:bid', addCommentToBook);
     app.put('/api/books/like/:bid', addLikeToBook);

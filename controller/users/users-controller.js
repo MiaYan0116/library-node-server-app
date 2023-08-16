@@ -1,5 +1,7 @@
 import * as usersDao from "./users-dao.js";
 
+
+
 const UsersController = (app) => {
     const register = async (req, res) => {
         const user = await usersDao.findUserByUsername(req.body.username);
@@ -20,7 +22,12 @@ const UsersController = (app) => {
             const user = await usersDao.findUserByCredentials(username, password);
             if(!user){
                 res.sendStatus(403);
-            }else{
+            } else if (user.isBanned) {
+                res.status(403).json({ message: "You are banned from logging in." });
+            } else{
+                user.loginTime = new Date();
+                user.loginTime.setHours(0, 0, 0, 0);
+                await user.save();
                 req.session["currentUser"] = user;
                 res.json(user);
             }
@@ -41,7 +48,43 @@ const UsersController = (app) => {
             res.sendStatus(404);
             return;
         }
-        res.json(currentUser);
+        const profile = {
+            username: currentUser.username,
+            fisrtname: currentUser.fisrtname,
+            lastname: currentUser.lastname,
+            email: currentUser.email,
+            password: currentUser.password,
+            follows: currentUser.follows,
+            followers: currentUser.followers,
+        }
+        res.json(profile);
+    }
+
+    const ownLikes = (req, res) => {
+        const currentUser = req.session["currentUser"];
+        if(!currentUser){
+            console.log("No found");
+            res.sendStatus(404);
+            return;
+        }
+        const likeAndComments = {
+            likes: currentUser.likes,
+            bookComments: currentUser.bookComments
+        }
+        res.json(likeAndComments);
+    }
+
+    const otherProfile = async (req, res) => {
+        const userId = req.params.uid;
+        const user = await usersDao.findUserById(userId);
+        const otherProfile = {
+            username: user.username,
+            follows: user.follows,
+            followers: user.followers,
+            likes: user.likes,
+            comments: user.bookComments
+        }
+        res.json(otherProfile);
     }
 
     const update = async (req, res) => {
@@ -56,13 +99,73 @@ const UsersController = (app) => {
         res.json(user);
     }
 
+    const addFollowToUser = async (req, res) => {
+        const currentUserId = req.session["currentUser"]._id; // Assuming you have the current user's ID in the session
+        const followUserId = req.params.followUserId; // Assuming you can get the ID of the user to be followed from the URL
+        const { updatedCurrentUser, updatedFollowedUser } = await usersDao.addFollowToUser(currentUserId, followUserId);
+        res.json({ updatedCurrentUser, updatedFollowedUser });
+    };
 
+    const adminBanOtherUsers = async(req, res) => {
+        const admin = req.session["currentUser"];
+        if(!admin || !admin.isAdmin){
+            res.sendStatus(403);
+            return;
+        }
+        const userId = req.params.uid;
+        const isBanned = req.body.isBanned;
+        const userUpdated = await usersDao.findUserById(userId);
+        if(!userUpdated){
+            res.sendStatus(404);
+            return;
+        }
+        userUpdated.isBanned = isBanned;
+        await userUpdated.save();
+        res.json(userUpdated);
+    }
+
+    const homePage = async (req, res) => {
+        const currentUser = req.session["currentUser"];
+        let likesCommentsData;
+        if (currentUser) {
+            // Get likes and comments of followed users
+            const followedUsers = currentUser.follows;
+            const promises = followedUsers.map(async userId => {
+                const user = await usersDao.findUserById(userId);
+                return {
+                    username: user.username,
+                    likes: user.likes,
+                    comments: user.bookComments
+                };
+            });
+            likesCommentsData = await Promise.all(promises);
+        } else {
+            // Get likes and comments of all users
+            const allUsers = await usersDao.findAllUsers();
+            const promises = allUsers.map(async user => {
+                return {
+                    username: user.username,
+                    likes: user.likes,
+                    comments: user.bookComments
+                };
+            });
+            likesCommentsData = await Promise.all(promises);
+        }
+        // Render the home page template with appropriate data
+        res.json(likesCommentsData); // Use your template engine or res.json()
+    }
 
     
     app.post("/api/users/register", register);
     app.post("/api/users/login", login);
     app.post("/api/users/logout", logout);
-    app.post("/api/users/profile", ownProfile);
+    app.get("/api/users/profile", ownProfile);
+    app.get("/api/users/profile/likes", ownLikes);
+    app.get("/api/users/profile/:uid", otherProfile);
     app.put("/api/users", update);
+    app.post("/api/users/follow/:followUserId", addFollowToUser);
+    app.put("/api/users/:uid/ban", adminBanOtherUsers);
+    app.get("/api/home", homePage);
+    
 };
 export default UsersController;
