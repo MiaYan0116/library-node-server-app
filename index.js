@@ -3,6 +3,7 @@ import "dotenv/config";
 import session from "express-session";
 import cors from 'cors'
 import bookController from './controller/books/book-controller.js';
+import UsersController from './controller/users/users-controller.js';
 import mongoose from 'mongoose';
 const PORT = process.env.PORT || 4000;
 const CONNECTION_STRING = process.env.MONGODB_URL || 'mongodb://127.0.0.1:27017/library'
@@ -22,19 +23,20 @@ app.use(cors({
 const sessionOptions = {
   secret: "any string",
   resave: false,
-  saveUninitialized: false,
+  saveUninitialized: true,
 };
 if (process.env.NODE_ENV !== "development") {
   sessionOptions.proxy = true;
   sessionOptions.cookie = {
 		sameSite: "none",
-		secure: true,
+		secure: false,
   };
 }
 
 app.use(session(sessionOptions));
 app.use(express.json());
 bookController(app);
+UsersController(app);
 
 app.listen(PORT, () => {
     console.log(`Server is running at PORT ${PORT}`);
