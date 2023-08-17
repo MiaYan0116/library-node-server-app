@@ -15,6 +15,15 @@ export const addCommentToUser = async (userId, comment) => {
     return updatedUser;
 }
 
+export const deleteCommentFromUser = async(userId, commentContent) => {
+    const updatedUser = await usersModel.findOneAndUpdate(
+        {_id: userId}, 
+        {$pull: {bookComments: {content: commentContent}}}, 
+        {new: true}
+        );
+        return updatedUser;
+}
+
 export const addLikeToUser = async (userId, like) => {
     const updatedUser = await usersModel.findByIdAndUpdate(
         {_id: userId},
@@ -46,6 +55,3 @@ export const getFollowedUsers = async(currentUserId) => {
     return currentUser.follows;
 }
 
-export const deleteCommentFromUser = async(userId, commentId) => {
-    return await usersModel.updateOne({_id: userId}, {$pull: {bookComments: {_id: commentId}}});
-}

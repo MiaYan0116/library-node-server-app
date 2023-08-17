@@ -31,7 +31,7 @@ const UsersController = (app) => {
                 user.loginTime = month * 100 + day;;
                 await user.save();
                 req.session["currentUser"] = user;
-                res.json(user);
+                res.json(req.session["currentUser"]);
             }
         }else{
             res.sendStatus(403);

@@ -1,6 +1,8 @@
 import * as booksDao from './books-dao.js';
 import * as usersDao from '../users/users-dao.js';
 import booksModel from "./books-model.js";
+import mongoose from 'mongoose';
+
 const bookController = (app) => {
 
     const searchAndSaveBooks = async(req, res) => {
@@ -58,6 +60,50 @@ const bookController = (app) => {
         res.json(updatedUser);
     }
 
+    const deleteComment = async(req, res) => {
+        const contentAdmin = req.session["currentUser"];
+        if(!contentAdmin || !contentAdmin.isContentAdmin){
+            res.sendStatus(403);
+            return;
+        }
+        const bookId = req.params.bid;
+        const commentId = req.params.cid;
+        const ObjectId = new mongoose.Types.ObjectId(commentId);
+        const book = await booksModel.findOne({
+            _id: bookId,
+            'bookComments._id': ObjectId
+          }, {
+            'bookComments.$': 1
+        });
+        if (book && book.bookComments && book.bookComments.length > 0) {
+            const comment = book.bookComments[0];
+            const userId = comment.user._id; 
+            const content = comment.content;
+            
+            const status_book = await booksDao.deleteComment(bookId, commentId);
+            const status_user = await usersDao.deleteCommentFromUser(userId, content);
+            res.json(status_book);
+            console.log(status_user);
+        }
+        
+        // const book = await booksDao.findOneBook(bookId);
+        // let comment;
+        // for(let i = 0; i < book.bookComments.length; i++){
+        //     if (book.bookComments[i]._id.toString() === commentId) {
+        //         comment = book.bookComments[i];
+        //         break;
+        //     }
+        // }
+        // console.log({"comment: " : comment});
+        // const bookStatus = await booksDao.deleteComment(bookId, commentId);
+        // const userStatus = await usersDao.deleteCommentFromUser(comment.user, commentId);
+        // if(bookStatus.success && userStatus.success){
+        //     res.json({message: "Comment deleted successfully"});
+        // }else{
+        //     res.status(500).json({ message: "Failed to delete comment" });
+        // }
+    }
+
     const addLikeToBook = async(req, res) => {
         const bookId = req.params.bid;
         const userId = req.session["currentUser"]._id;
@@ -68,30 +114,7 @@ const bookController = (app) => {
         res.json(updatedUser);
     }
 
-    // const deleteComment = async(req, res) => {
-    //     const currentUser = req.session["currentUser"];
-    //     if(!currentUser || !currentUser.isContentAdmin){
-    //         return res.status(403).json({ message: "Permission denied" });
-    //     }
-    //     const bookId = req.params.bid;
-    //     const commentId = req.params.cid;
-    //     const book = await booksDao.findOneBook(bookId);
-    //     let comment;
-    //     for(let i = 0; i < book.bookComments.length; i++){
-    //         if (book.bookComments[i]._id.toString() === commentId) {
-    //             comment = book.bookComments[i];
-    //             break;
-    //         }
-    //     }
-    //     console.log({"comment: " : comment});
-    //     const bookStatus = await booksDao.deleteComment(bookId, commentId);
-    //     const userStatus = await usersDao.deleteCommentFromUser(comment.user, commentId);
-    //     if(bookStatus.success && userStatus.success){
-    //         res.json({message: "Comment deleted successfully"});
-    //     }else{
-    //         res.status(500).json({ message: "Failed to delete comment" });
-    //     }
-    // }
+
 
 
     app.post('/api/books', searchAndSaveBooks);
@@ -101,6 +124,6 @@ const bookController = (app) => {
     app.put('/api/books/:bid', updateBook);
     app.post('/api/books/:bid', addCommentToBook);
     app.put('/api/books/like/:bid', addLikeToBook);
-    // app.delete('/api/books/:bid/comments/:cid', deleteComment);
+    app.delete('/api/books/:bid/comments/:cid', deleteComment);
 };
 export default bookController;
