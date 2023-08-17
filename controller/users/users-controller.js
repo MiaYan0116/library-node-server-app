@@ -88,6 +88,7 @@ const UsersController = (app) => {
     }
 
     const update = async (req, res) => {
+        req.session["currentUser"] = req.body;
         const currentUser = req.session["currentUser"];
         if(!currentUser){
             res.sendStatus(404);
@@ -154,7 +155,6 @@ const UsersController = (app) => {
         // Render the home page template with appropriate data
         res.json(likesCommentsData); // Use your template engine or res.json()
     }
-
     
     app.post("/api/users/register", register);
     app.post("/api/users/login", login);

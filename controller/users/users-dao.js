@@ -45,3 +45,7 @@ export const getFollowedUsers = async(currentUserId) => {
     }
     return currentUser.follows;
 }
+
+export const deleteCommentFromUser = async(userId, commentId) => {
+    return await usersModel.updateOne({_id: userId}, {$pull: {bookComments: {_id: commentId}}});
+}
