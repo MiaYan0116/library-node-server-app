@@ -25,8 +25,10 @@ const UsersController = (app) => {
             } else if (user.isBanned) {
                 res.status(403).json({ message: "You are banned from logging in." });
             } else{
-                user.loginTime = new Date();
-                user.loginTime.setHours(0, 0, 0, 0);
+                const loginTimeDate = new Date();
+                const month = loginTimeDate.getMonth() + 1; 
+                const day = loginTimeDate.getDate();
+                user.loginTime = month * 100 + day;;
                 await user.save();
                 req.session["currentUser"] = user;
                 res.json(user);
@@ -155,6 +157,12 @@ const UsersController = (app) => {
         // Render the home page template with appropriate data
         res.json(likesCommentsData); // Use your template engine or res.json()
     }
+
+    const findAllUsers = async(req, res) => {
+        const users = await usersDao.findAllUsers();
+        users.sort((userA, userB) => userB.loginTime - userA.loginTime);
+        res.json(users);
+    }
     
     app.post("/api/users/register", register);
     app.post("/api/users/login", login);
@@ -166,6 +174,7 @@ const UsersController = (app) => {
     app.post("/api/users/follow/:followUserId", addFollowToUser);
     app.put("/api/users/:uid/ban", adminBanOtherUsers);
     app.get("/api/home", homePage);
+    app.get("/api/users", findAllUsers);
     
 };
 export default UsersController;

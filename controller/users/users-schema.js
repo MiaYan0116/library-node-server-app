@@ -6,7 +6,7 @@ const usersSchema = new mongoose.Schema({
     lastname: String,
     email:{ type: String },
     password: {type: String, required: true},
-    loginTime: { type: Date },
+    loginTime: { type: Number },
     isAdmin: { type: Boolean, default: false },
     isContentAdmin: {type: Boolean, default: false},
     isBanned: { type: Boolean, default: false },
