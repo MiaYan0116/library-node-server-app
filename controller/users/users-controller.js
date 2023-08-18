@@ -4,7 +4,7 @@ import * as usersDao from "./users-dao.js";
 
 const UsersController = (app) => {
     const register = async (req, res) => {
-        const user = await usersDao.findUserByUsername(req.body.username);
+        const user = await usersDao.findUserByUsername({username: req.body.username});
         if(user){
             res.sendStatus(403);
             console.log("duplicated user");
@@ -163,6 +163,17 @@ const UsersController = (app) => {
         users.sort((userA, userB) => userB.loginTime - userA.loginTime);
         res.json(users);
     }
+
+    const findFollowsAndFollowers = async (req, res) => {
+        const currentUser = req.session["currentUser"];
+        const user = await usersDao.findById(currentUser._id).populate('follows followers').exec();
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        const follows = user.follows;       
+        const followers = user.followers;   
+        res.status(200).json({ follows, followers });
+    }
     
     app.post("/api/users/register", register);
     app.post("/api/users/login", login);
@@ -175,6 +186,7 @@ const UsersController = (app) => {
     app.put("/api/users/:uid/ban", adminBanOtherUsers);
     app.get("/api/home", homePage);
     app.get("/api/users", findAllUsers);
+    app.get("api/users/profile/follows", findFollowsAndFollowers);
     
 };
 export default UsersController;

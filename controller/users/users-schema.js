@@ -10,10 +10,10 @@ const usersSchema = new mongoose.Schema({
     isAdmin: { type: Boolean, default: false },
     isContentAdmin: {type: Boolean, default: false},
     isBanned: { type: Boolean, default: false },
-    likes:[{ book: {type: mongoose.Schema.Types.ObjectId, ref: 'books'}}],
+    likes:[{ book: String}],
     bookComments:[{ 
         content: String,
-        book: {type: mongoose.Schema.Types.ObjectId, ref: 'books'}
+        book: String
     }],
     follows: [{ type: mongoose.Schema.Types.ObjectId, ref: 'users' }],
     followers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'users' }]

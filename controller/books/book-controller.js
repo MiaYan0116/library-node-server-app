@@ -22,10 +22,15 @@ const bookController = (app) => {
                     cover_id: externalBookData.cover_id,
                     cover_img: externalBookData.cover_img,
                     edition_count: externalBookData.edition_count,
+                    // description: externalBookData.description,
+                    // subject_places: externalBookData.subject_places,
+                    // subject_times: externalBookData.subject_times,
+                    // subjects: externalBookData.subjects,
                     liked: false,
                     likes: [],
                     bookComments: []
                 };
+                console.log(newBook._id);
                 // Save the new book to the internal database
                 const insertedBook = await booksDao.createBook(newBook);
                 savedBooks.push(insertedBook);
@@ -39,10 +44,15 @@ const bookController = (app) => {
         res.json(books);
     }
 
-    const bookDetails = async (req, res) => {
+    const bookCommentsAndLikes = async (req, res) => {
         const bookId = req.params.bid;
-        const book = await booksDao.findOneBook(bookId)
-        res.json(book);
+        const book = await booksDao.findOneBook(bookId);
+        const commentsAndLikes = {
+            comments: book.bookComments,
+            likes: book.likes
+        }
+        console.log(commentsAndLikes.comments);
+        res.json(commentsAndLikes);
     }
     
     const updateBook = async(req, res) => {
@@ -55,10 +65,10 @@ const bookController = (app) => {
     const addCommentToBook = async(req, res) => {
         const bookId = req.params.bid;
         const commentContent = req.body.comment;
-        const userId = req.session["currentUser"]._id;
-        const comment = { content: commentContent, user: userId, book: bookId};
+        const user = req.session["currentUser"];
+        const comment = { content: commentContent, user: user, book: bookId};
         const status = await booksDao.addCommentToBook(bookId, comment);
-        const updatedUser = await usersDao.addCommentToUser(userId, comment);
+        const updatedUser = await usersDao.addCommentToUser(user, comment);
         res.json(updatedUser);
     }
 
@@ -91,11 +101,11 @@ const bookController = (app) => {
 
     const addLikeToBook = async(req, res) => {
         const bookId = req.params.bid;
-        const userId = req.session["currentUser"]._id;
+        const user = req.session["currentUser"];
         console.log(req.session["currentUser"])
-        const like = {user: userId, book: bookId};
+        const like = {user: user, book: bookId};
         const status = await booksDao.addLikeToBook(bookId, like);
-        const updatedUser = await usersDao.addLikeToUser(userId, like);
+        const updatedUser = await usersDao.addLikeToUser(user, like);
         res.json(updatedUser);
     }
 
@@ -105,7 +115,7 @@ const bookController = (app) => {
     app.post('/api/books', searchAndSaveBooks);
     // app.post('/api/books', createBook);
     app.get('/api/books', findBooks);
-    app.get('/api/books/details/:bid', bookDetails);
+    app.get('/api/books/details/:bid', bookCommentsAndLikes);
     app.put('/api/books/:bid', updateBook);
     app.post('/api/books/:bid', addCommentToBook);
     app.put('/api/books/like/:bid', addLikeToBook);
