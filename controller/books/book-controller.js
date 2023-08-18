@@ -2,6 +2,7 @@ import * as booksDao from './books-dao.js';
 import * as usersDao from '../users/users-dao.js';
 import booksModel from "./books-model.js";
 import mongoose from 'mongoose';
+import { Types } from 'mongoose';
 
 const bookController = (app) => {
 
@@ -9,7 +10,8 @@ const bookController = (app) => {
         const searchResults = req.body.searchResults;
         const savedBooks = [];
         for (const externalBookData of searchResults) {
-            const existingBook = await booksDao.findBookById(externalBookData.id);
+            // const bookId = new mongoose.Types.ObjectId(externalBookData.id);
+            const existingBook = await booksDao.findOneBook(externalBookData.id);
             if(!existingBook){
                 // Create a new book object based on external API data
                 const newBook = {
@@ -85,23 +87,6 @@ const bookController = (app) => {
             res.json(status_book);
             console.log(status_user);
         }
-        
-        // const book = await booksDao.findOneBook(bookId);
-        // let comment;
-        // for(let i = 0; i < book.bookComments.length; i++){
-        //     if (book.bookComments[i]._id.toString() === commentId) {
-        //         comment = book.bookComments[i];
-        //         break;
-        //     }
-        // }
-        // console.log({"comment: " : comment});
-        // const bookStatus = await booksDao.deleteComment(bookId, commentId);
-        // const userStatus = await usersDao.deleteCommentFromUser(comment.user, commentId);
-        // if(bookStatus.success && userStatus.success){
-        //     res.json({message: "Comment deleted successfully"});
-        // }else{
-        //     res.status(500).json({ message: "Failed to delete comment" });
-        // }
     }
 
     const addLikeToBook = async(req, res) => {
