@@ -30,7 +30,6 @@ const UsersController = (app) => {
                 const day = loginTimeDate.getDate();
                 user.loginTime = month * 100 + day;;
                 // req.session["currentUser"] = user;
-                console.log(user._id, "login");
                 res.json(user);
             }
         }else{
@@ -44,7 +43,6 @@ const UsersController = (app) => {
     };
 
     const ownProfile = (req, res) => {
-        console.log(req.session);
         const currentUser = req.session["currentUser"];
         if(!currentUser){
             console.log("No found");

@@ -66,8 +66,6 @@ const bookController = (app) => {
     } 
 
     const addCommentToBook = async(req, res) => {
-        console.log("bid from backend:", req.params.bid);
-        console.log("Comment from backend:", req.body);
         const bookId = req.params.bid;
         const commentContent = req.body.comment;
         const user = req.body.user;
@@ -109,13 +107,18 @@ const bookController = (app) => {
     }
 
     const addLikeToBook = async(req, res) => {
+        console.log("bid from backend:", req.params.bid);
+        console.log("Comment from backend:", req.body);
         const bookId = req.params.bid;
-        const user = req.session["currentUser"];
-        console.log(req.body);
+        const user = req.body;
+        if(!user){
+            res.sendStatus(401);
+            return;
+        }
         const like = {user: user, book: bookId};
         const status = await booksDao.addLikeToBook(bookId, like);
         const updatedUser = await usersDao.addLikeToUser(user, like);
-        res.json(updatedUser);
+        res.json(status);
     }
 
 
