@@ -14,17 +14,12 @@ const app = express();
 const allowedOrigins = [
     "http://localhost:3000"
 ];
-app.use(cors({
-  credentials: true,
-  origin: function (origin, callback) {
-    callback(null, true);
-  }
-}));
+
 // app.use(cors({
 //   credentials: true,
 //   origin: "http://localhost:3000", 
 // }));
-
+app.use(express.json());
 const sessionOptions = {
   secret: "any string",
   resave: false,
@@ -37,9 +32,13 @@ if (process.env.NODE_ENV !== "development") {
 		secure: false,
   };
 }
-
 app.use(session(sessionOptions));
-app.use(express.json());
+app.use(cors({
+  credentials: true,
+  origin: function (origin, callback) {
+    callback(null, true);
+  }
+}));
 bookController(app);
 UsersController(app);
 

@@ -25,7 +25,7 @@ export const deleteCommentFromUser = async(userId, commentContent) => {
 }
 
 export const addLikeToUser = async (userId, like) => {
-    const updatedUser = await usersModel.findByIdAndUpdate(
+    const updatedUser = await usersModel.findOneAndUpdate(
         {_id: userId},
         {$push: {likes: like}},
         {new: true}

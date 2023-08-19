@@ -3,7 +3,8 @@ import usersSchema from '../users/users-schema.js';
 const commentSchema = mongoose.Schema({
     content: String,
     user: usersSchema,
-    book: String
+    book: String,
+	commentTime: Date
 });
 
 const likesSchema = mongoose.Schema({
@@ -24,10 +25,7 @@ const bookSchema = mongoose.Schema({
 	subject_times: [String],
 	subjects: [String],
     liked: Boolean,
-		likes: {
-			type: [likesSchema],
-			default: []
-		},
+	likes: [likesSchema],
     bookComments: [commentSchema]
 }, {collection: 'books'});
 

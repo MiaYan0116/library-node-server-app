@@ -30,11 +30,15 @@ const bookController = (app) => {
                     likes: [],
                     bookComments: []
                 };
-                console.log(newBook._id);
-                // Save the new book to the internal database
-                const insertedBook = await booksDao.createBook(newBook);
-                savedBooks.push(insertedBook);
-            } 
+                const result = await booksDao.upsertBook(newBook);
+                if (result.upserted) {
+                    savedBooks.push(newBook);
+                }
+            }
+                // console.log(newBook._id);
+                // // Save the new book to the internal database
+                // const insertedBook = await booksDao.createBook(newBook);
+                // savedBooks.push(insertedBook);
         }
         res.json(savedBooks);
     }
@@ -51,7 +55,6 @@ const bookController = (app) => {
             comments: book.bookComments,
             likes: book.likes
         }
-        console.log(commentsAndLikes.comments);
         res.json(commentsAndLikes);
     }
     
@@ -66,10 +69,16 @@ const bookController = (app) => {
         const bookId = req.params.bid;
         const commentContent = req.body.comment;
         const user = req.session["currentUser"];
+        
+        if(!user){
+            res.sendStatus(404);
+            return;
+        }
         const comment = { content: commentContent, user: user, book: bookId};
         const status = await booksDao.addCommentToBook(bookId, comment);
         const updatedUser = await usersDao.addCommentToUser(user, comment);
-        res.json(updatedUser);
+        console.log(req.session)
+        res.json(status);
     }
 
     const deleteComment = async(req, res) => {
@@ -102,7 +111,7 @@ const bookController = (app) => {
     const addLikeToBook = async(req, res) => {
         const bookId = req.params.bid;
         const user = req.session["currentUser"];
-        console.log(req.session["currentUser"])
+        console.log(req.body);
         const like = {user: user, book: bookId};
         const status = await booksDao.addLikeToBook(bookId, like);
         const updatedUser = await usersDao.addLikeToUser(user, like);

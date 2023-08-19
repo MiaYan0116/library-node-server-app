@@ -30,7 +30,8 @@ const UsersController = (app) => {
                 const day = loginTimeDate.getDate();
                 user.loginTime = month * 100 + day;;
                 await user.save();
-                req.session["currentUser"] = user;
+                req.session.data = {currentUser: user};
+                console.log(req.session, "login")
                 res.json(req.session["currentUser"]);
             }
         }else{
@@ -52,12 +53,13 @@ const UsersController = (app) => {
         }
         const profile = {
             username: currentUser.username,
-            fisrtname: currentUser.fisrtname,
+            firsrtname: currentUser.firstname,
             lastname: currentUser.lastname,
             email: currentUser.email,
             password: currentUser.password,
             follows: currentUser.follows,
             followers: currentUser.followers,
+            avatar: currentUser.avatarUrl
         }
         res.json(profile);
     }
@@ -84,7 +86,8 @@ const UsersController = (app) => {
             follows: user.follows,
             followers: user.followers,
             likes: user.likes,
-            comments: user.bookComments
+            comments: user.bookComments,
+            avatar: user.avatarUrl
         }
         res.json(otherProfile);
     }
