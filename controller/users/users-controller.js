@@ -29,10 +29,9 @@ const UsersController = (app) => {
                 const month = loginTimeDate.getMonth() + 1; 
                 const day = loginTimeDate.getDate();
                 user.loginTime = month * 100 + day;;
-                await user.save();
-                req.session.data = {currentUser: user};
-                console.log(req.session, "login")
-                res.json(req.session["currentUser"]);
+                // req.session["currentUser"] = user;
+                console.log(user._id, "login");
+                res.json(user);
             }
         }else{
             res.sendStatus(403);
@@ -45,6 +44,7 @@ const UsersController = (app) => {
     };
 
     const ownProfile = (req, res) => {
+        console.log(req.session);
         const currentUser = req.session["currentUser"];
         if(!currentUser){
             console.log("No found");
@@ -93,8 +93,8 @@ const UsersController = (app) => {
     }
 
     const update = async (req, res) => {
-        req.session["currentUser"] = req.body;
-        const currentUser = req.session["currentUser"];
+        console.log(req.body);
+        const currentUser = req.body;
         if(!currentUser){
             res.sendStatus(404);
             return;

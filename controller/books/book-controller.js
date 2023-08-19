@@ -66,10 +66,11 @@ const bookController = (app) => {
     } 
 
     const addCommentToBook = async(req, res) => {
+        console.log("bid from backend:", req.params.bid);
+        console.log("Comment from backend:", req.body);
         const bookId = req.params.bid;
         const commentContent = req.body.comment;
-        const user = req.session["currentUser"];
-        
+        const user = req.body.user;
         if(!user){
             res.sendStatus(404);
             return;
@@ -77,7 +78,6 @@ const bookController = (app) => {
         const comment = { content: commentContent, user: user, book: bookId};
         const status = await booksDao.addCommentToBook(bookId, comment);
         const updatedUser = await usersDao.addCommentToUser(user, comment);
-        console.log(req.session)
         res.json(status);
     }
 
