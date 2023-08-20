@@ -121,7 +121,18 @@ const bookController = (app) => {
         res.json(status);
     }
 
-
+    const detailsInProfile = async(req, res) => {
+        const bookId = req.params.bid;
+        const book = await booksDao.findOneBook(bookId);
+        const details = {
+            title: book.title,
+            author: book.author,
+            comments: book.bookComments,
+            likes: book.likes
+        }
+        console.log(details);
+        res.json(details);
+    }
 
 
     app.post('/api/books', searchAndSaveBooks);
@@ -132,5 +143,6 @@ const bookController = (app) => {
     app.post('/api/books/:bid', addCommentToBook);
     app.put('/api/books/like/:bid', addLikeToBook);
     app.delete('/api/books/:bid/comments/:cid', deleteComment);
+    app.get('/api/books/details/profile/:bid', detailsInProfile);
 };
 export default bookController;
