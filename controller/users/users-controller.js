@@ -21,15 +21,15 @@ const UsersController = (app) => {
         if(password && username){
             const user = await usersDao.findUserByCredentials(username, password);
             if(!user){
-                res.sendStatus(403);
+                res.status(403).json({ message: "Incorrect username or password" });
             } else if (user.isBanned) {
                 res.status(403).json({ message: "You are banned from logging in." });
             } else{
                 const loginTimeDate = new Date();
                 const month = loginTimeDate.getMonth() + 1; 
                 const day = loginTimeDate.getDate();
-                user.loginTime = month * 100 + day;;
-                // req.session["currentUser"] = user;
+                user.loginTime = month * 100 + day;
+                await usersDao.updatedUser(user._id, user);
                 res.json(user);
             }
         }else{
@@ -104,10 +104,15 @@ const UsersController = (app) => {
     }
 
     const addFollowToUser = async (req, res) => {
-        const currentUserId = req.session["currentUser"]._id; // Assuming you have the current user's ID in the session
-        const followUserId = req.params.followUserId; // Assuming you can get the ID of the user to be followed from the URL
-        const { updatedCurrentUser, updatedFollowedUser } = await usersDao.addFollowToUser(currentUserId, followUserId);
-        res.json({ updatedCurrentUser, updatedFollowedUser });
+        console.log("Received request body:", req.body);
+        try {
+            const currentUserId = req.body.currentUser._id;
+            const followUserId = req.params.followUserId;
+            const { updatedCurrentUser, updatedFollowedUser } = await usersDao.addFollowToUser(currentUserId, followUserId);
+            res.json({ updatedCurrentUser, updatedFollowedUser });
+        } catch (error) {
+            res.status(500).json({ error: "Internal Server Error" });
+        }
     };
 
     const adminBanOtherUsers = async(req, res) => {

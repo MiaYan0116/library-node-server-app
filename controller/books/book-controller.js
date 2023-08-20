@@ -73,7 +73,7 @@ const bookController = (app) => {
             res.sendStatus(404);
             return;
         }
-        const comment = { content: commentContent, user: user, book: bookId};
+        const comment = { content: commentContent, user: user, book: bookId, commentTime: new Date()};
         const status = await booksDao.addCommentToBook(bookId, comment);
         const updatedUser = await usersDao.addCommentToUser(user, comment);
         res.json(status);
