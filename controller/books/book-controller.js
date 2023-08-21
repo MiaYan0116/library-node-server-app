@@ -98,7 +98,6 @@ const bookController = (app) => {
             const comment = book.bookComments[0];
             const userId = comment.user._id; 
             const content = comment.content;
-            
             const status_book = await booksDao.deleteComment(bookId, commentId);
             const status_user = await usersDao.deleteCommentFromUser(userId, content);
             res.json(status_book);
@@ -107,12 +106,10 @@ const bookController = (app) => {
     }
 
     const addLikeToBook = async(req, res) => {
-        console.log("bid from backend:", req.params.bid);
-        console.log("Comment from backend:", req.body);
         const bookId = req.params.bid;
-        const user = req.body;
-        if(!user){
-            res.sendStatus(401);
+        const user = req.body; 
+        if(Object.keys(user).length === 0) {
+            res.sendStatus(404);
             return;
         }
         const like = {user: user, book: bookId};
