@@ -3,6 +3,7 @@ import * as usersDao from '../users/users-dao.js';
 import booksModel from "./books-model.js";
 import mongoose from 'mongoose';
 import { Types } from 'mongoose';
+import usersModel from '../users/users-model.js';
 
 const bookController = (app) => {
 
@@ -79,29 +80,79 @@ const bookController = (app) => {
         res.json(status);
     }
 
+    // const deleteComment = async(req, res) => {
+    //     const contentAdmin = req.session["currentUser"];
+    //     if(!contentAdmin || !contentAdmin.isContentAdmin){
+    //         res.sendStatus(403);
+    //         return;
+    //     }
+    //     const bookId = req.params.bid;
+    //     const commentId = req.params.cid;
+    //     const ObjectId = new mongoose.Types.ObjectId(commentId);
+    //     const book = await booksModel.findOne({
+    //         _id: bookId,
+    //         'bookComments._id': ObjectId
+    //       }, {
+    //         'bookComments.$': 1
+    //     });
+    //     if (book && book.bookComments && book.bookComments.length > 0) {
+    //         const comment = book.bookComments[0];
+    //         const userId = comment.user._id; 
+    //         const content = comment.content;
+    //         const status_book = await booksDao.deleteComment(bookId, commentId);
+    //         const status_user = await usersDao.deleteCommentFromUser(userId, content);
+    //         res.json(status_book);
+    //         console.log(status_user);
+    //     }
+    // }
+
     const deleteComment = async(req, res) => {
-        const contentAdmin = req.session["currentUser"];
-        if(!contentAdmin || !contentAdmin.isContentAdmin){
+        console.log("Triggered deletecomment", req.body, req.params, req.body);
+        const userIdFromFrontend = req.body.userId;
+
+        // Fetch the user from the database using the userIdFromFrontend
+        const userTryingToDelete = await usersModel.findById(userIdFromFrontend);
+
+        if (!userTryingToDelete) {
+            console.log("User trying to delete not found");
             res.sendStatus(403);
             return;
         }
+
+        console.log("User trying to delete:", userTryingToDelete);
+
         const bookId = req.params.bid;
         const commentId = req.params.cid;
         const ObjectId = new mongoose.Types.ObjectId(commentId);
         const book = await booksModel.findOne({
             _id: bookId,
             'bookComments._id': ObjectId
-          }, {
+        }, {
             'bookComments.$': 1
         });
+        // console.log("Fetched book:", book);
+
         if (book && book.bookComments && book.bookComments.length > 0) {
             const comment = book.bookComments[0];
-            const userId = comment.user._id; 
+            const userId = comment.user._id;
             const content = comment.content;
+
+            // Check if the user trying to delete has the necessary permissions
+            if (!userTryingToDelete.isAdmin && !userTryingToDelete.isContentAdmin && userTryingToDelete._id !== userId) {
+                console.log("Permission denied for deleting comment");
+                res.sendStatus(403);
+                return;
+            }
+
+            console.log("Deleting comment for book");
             const status_book = await booksDao.deleteComment(bookId, commentId);
+            console.log("Deleting comment for user");
             const status_user = await usersDao.deleteCommentFromUser(userId, content);
+
             res.json(status_book);
-            console.log(status_user);
+        } else {
+            console.log("No matching book found with the comment");
+            res.status(404).send("Book with the comment not found");
         }
     }
 

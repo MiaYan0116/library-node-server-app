@@ -116,19 +116,23 @@ const UsersController = (app) => {
     };
 
     const adminBanOtherUsers = async(req, res) => {
-        const admin = req.session["currentUser"];
-        if(!admin || !admin.isAdmin){
-            res.sendStatus(403);
-            return;
-        }
+        console.log(req.body);
+        // const admin = req.body.user;
+        // if(!admin || !admin.isAdmin){
+        //     res.sendStatus(403);
+        //     return;
+        // }
         const userId = req.params.uid;
-        const isBanned = req.body.isBanned;
         const userUpdated = await usersDao.findUserById(userId);
         if(!userUpdated){
             res.sendStatus(404);
             return;
         }
-        userUpdated.isBanned = isBanned;
+        if(userUpdated.isBanned){
+            userUpdated.isBanned = false;
+        }else{
+            userUpdated.isBanned = true
+        };
         await userUpdated.save();
         res.json(userUpdated);
     }
@@ -189,7 +193,7 @@ const UsersController = (app) => {
     app.get("/api/users/profile/:uid", otherProfile);
     app.put("/api/users", update);
     app.post("/api/users/follow/:followUserId", addFollowToUser);
-    app.put("/api/users/:uid/ban", adminBanOtherUsers);
+    app.put("/api/users/ban/:uid", adminBanOtherUsers);
     app.get("/api/home", homePage);
     app.get("/api/users", findAllUsers);
     app.get("api/users/profile/follows", findFollowsAndFollowers);
