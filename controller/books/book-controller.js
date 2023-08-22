@@ -13,6 +13,7 @@ const bookController = (app) => {
         for (const externalBookData of searchResults) {
             // const bookId = new mongoose.Types.ObjectId(externalBookData.id);
             const existingBook = await booksDao.findOneBook(externalBookData.id);
+            console.log(!existingBook);
             if(!existingBook){
                 // Create a new book object based on external API data
                 const newBook = {
@@ -31,16 +32,18 @@ const bookController = (app) => {
                     likes: [],
                     bookComments: []
                 };
-                const result = await booksDao.upsertBook(newBook);
-                if (result.upserted) {
-                    savedBooks.push(newBook);
-                }
+                // Save the new book to the internal database
+                const insertedBook = await booksDao.createBook(newBook);
+                savedBooks.push(insertedBook);
+                // const result = await booksDao.upsertBook(newBook);
+                // if (result.upserted) {
+                //     savedBooks.push(newBook);
+                // }
             }
                 // console.log(newBook._id);
-                // // Save the new book to the internal database
-                // const insertedBook = await booksDao.createBook(newBook);
-                // savedBooks.push(insertedBook);
+                
         }
+        console.log(savedBooks.length);
         res.json(savedBooks);
     }
 
